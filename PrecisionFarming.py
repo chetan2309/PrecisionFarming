@@ -4,11 +4,16 @@ import pprint
 import uuid
 from typing import TypedDict, Annotated
 
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import AnyMessage, SystemMessage, HumanMessage, ToolMessage
 from langchain_core.output_parsers import JsonOutputParser, MarkdownListOutputParser
 from langgraph.graph import StateGraph, END
 import AgentTools as tools
+
+AZURE_DEPLOYMENT="gpt-4o"
+API_VERSION="2024-05-01-preview"
+AZURE_ENDPOINT="https://agtech-llm-openai.openai.azure.com"
+API_KEY="5366f9c0121f4852afeb69388c2aff3a"
 
 
 class AgentState(TypedDict):
@@ -60,7 +65,10 @@ class Agent:
 
 class PrecisionFarming:
     def __init__(self):
-        self.model = ChatOpenAI(model='gpt-4o', openai_api_key=os.getenv("OPENAI_API_KEY"), )
+        self.model = AzureChatOpenAI(
+            azure_deployment=AZURE_DEPLOYMENT,
+            api_version=API_VERSION,
+            azure_endpoint=AZURE_ENDPOINT)
         self.tool_list = [tools.decrease_ph, tools.get_weather_data,
                      tools.get_crop_info, tools.calculate_water_needed, tools.tackle_insect, tools.tackle_disease,
                           tools.increase_ph]
@@ -116,8 +124,8 @@ class PrecisionFarming:
     def get_insights(self, soil_ph = 6.5, soil_moisture = 30, latitude = 35.41, longitude= -80.58,
                      area_acres = 10, crop = "Corn", insect = None, leaf = None):
 
-        print("inset-->", insect, type(insect))
-        print("leaf-->", leaf, type(leaf))
+        #print("inset-->", insect, type(insect))
+        #print("leaf-->", leaf, type(leaf))
 
         if insect is not None: insect = tools.predict_insect(insect)
         if leaf is not None:
