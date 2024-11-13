@@ -130,24 +130,26 @@ class PrecisionFarming:
     def get_insights(self, soil_ph=6.5, soil_moisture=30, latitude=35.41, longitude=-80.58,
                     area_acres=10, crop="Corn", insect=None, leaf=None, status_callback=None):
         try:
-            if status_callback:
-                status_callback("Starting analysis...", 0, "initial")
+            # if status_callback:
+            #     status_callback("Starting analysis...", 0, "initial")
 
             # Process images if provided
             if insect is not None:
                 if status_callback:
-                    status_callback("Processing insect image...", 10, "insect_processing")
+                    status_callback("Identifying The Insect/Pest...", 10, "Insect Processing")
                 insect = tools.predict_insect(insect)
+                status_callback("Identified The Insect/Pest.", 100, "Insect Processing")
 
             if leaf is not None:
                 if status_callback:
-                    status_callback("Processing leaf disease image...", 20, "leaf_processing")
+                    status_callback("Identifying The Leaf...", 20, "Processing Leaf Image")
                 if crop == "Corn":
                     leaf = tools.predict_corn_leaf_disease(leaf)
                 elif crop == "Cotton":
                     leaf = tools.predict_cotton_leaf_disease(leaf)
                 elif crop == "Soybean":
                     leaf = tools.predict_soybean_leaf_disease(leaf)
+                status_callback("Identified The Leaf.", 100, "Processing Leaf Image")
 
             # Format prompt with inputs
             prompt = self.prompt.format(
@@ -167,7 +169,7 @@ class PrecisionFarming:
             question = "Give me your precision farming assessment"
 
             if status_callback:
-                status_callback("Analyzing farm conditions...", 30, "analysis")
+                status_callback("Analyzing farm conditions...", 30, "Analysis")
 
             # Get farming assessment
             response = abot.graph.invoke({
@@ -178,7 +180,7 @@ class PrecisionFarming:
             })
 
             if status_callback:
-                status_callback("Analysis complete!", 100, "complete")
+                status_callback("Analysis complete!", 100, "Analysis")
 
             return response['messages'][-1].content
 

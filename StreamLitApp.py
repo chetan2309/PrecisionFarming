@@ -38,7 +38,7 @@ def create_streamlit_app():
     
     st.title("🌾 Precision Farming Agent")
 
-    modal = Modal("Select a Location on Map", key="map_modal")
+    modal = Modal("Locate Your Field", key="map_modal")
 
 
     # State variables for selected location and location name
@@ -66,7 +66,7 @@ def create_streamlit_app():
                            on_change=lambda: update_lat_long(st.session_state.loc))
         
         # Button to open the modal
-        if st.button("Open Map Popup"):
+        if st.button("Locate Your Field"):
             modal.open()
 
             # Show the modal and load the map inside it when the button is clicked
@@ -135,50 +135,68 @@ def create_streamlit_app():
             st.image(insect_img, caption="Uploaded Insect Image")
             insect_img = image.load_img(insect_img, target_size=(224, 224))
 
-
-
  
     analyze_button = st.button("Analyze Farm Conditions")
-
+    on_click=lambda: display_area.empty()
+    #("Analyze Farm Conditions", on_click=lambda: display_area.empty())
+    
     display_area = st.empty()
+
     if analyze_button:
-        try:
+            display_area = st.empty()
+            # Create a container within the placeholder for progress
             with display_area.container():
-                status_area = st.empty()
-                progress_area = st.empty()
+                status_area = st.container()
+                progress_area = st.container()
+                tool_progress = {}
 
-                def update_status(message, progress, step):
-                    if progress >= 0:
-                        progress_value = min(max(progress, 0), 100) / 100.0
-                        progress_area.progress(progress_value)
-                        status_area.info(f"🔄 Step: {step}\n{message}")
+                def update_status(message, progress, tool_name):
+                    with status_area:
+                        if progress == -1:
+                            st.error(message)
+                            return
 
-                insights = st.session_state.pf.get_insights(
-                    soil_ph=soil_ph,
-                    soil_moisture=soil_moisture,
-                    latitude=latitude,
-                    longitude=longitude,
-                    area_acres=area,
-                    crop=crop,
-                    insect=insect_img,
-                    leaf=leaf_img,
-                    status_callback=update_status)
+                        if tool_name not in tool_progress:
+                            with progress_area:
+                                tool_progress[tool_name] = {
+                                    'status': st.empty(),
+                                    'bar': st.progress(0)
+                                }
 
-                # Show completion animation
-                status_area.empty()
-                progress_area.empty()
-                show_completion_animation()
+                        prog = tool_progress[tool_name]
+                        prog['status'].info(f"{tool_name}: {message}")
+                        prog['bar'].progress(int(progress))
 
-                # Clear and show results
-                display_area.empty()
-                with display_area.container():
-                    st.header("Analysis Status & Results")
-                    st.markdown("### 🌟 Farm Analysis Results")
-                    st.markdown("---")
-                    st.markdown(insights)
+                try:
 
-        except Exception as e:
-            display_area.error(f"An error occurred: {str(e)}")
+                    # Get insights with progress tracking
+                    insights = st.session_state.pf.get_insights(
+                        soil_ph=soil_ph,
+                        soil_moisture=soil_moisture,
+                        latitude=latitude,
+                        longitude=longitude,
+                        area_acres=area,
+                        crop=crop,
+                        insect=insect_img,
+                        leaf=leaf_img,
+                        status_callback=update_status)
+
+                    # Show completion animation
+                    show_completion_animation()
+
+                    # Clear the progress display and show results
+                    display_area.empty()
+                    with display_area.container():
+                        st.header("Analysis Status & Results")
+                        st.success("✨ Analysis Complete!")
+                        st.markdown("### Farm Analysis Results")
+                        # Add a visual separator
+                        st.markdown("---")
+                        # Display the results in a clean format
+                        st.markdown(insights)
+
+                except Exception as e:
+                    st.error(f"An error occurred: {str(e)}")
 
 if __name__ == "__main__":
     create_streamlit_app()
