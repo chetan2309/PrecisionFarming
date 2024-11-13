@@ -136,14 +136,11 @@ def create_streamlit_app():
             insect_img = image.load_img(insect_img, target_size=(224, 224))
 
  
-    analyze_button = st.button("Analyze Farm Conditions")
-    on_click=lambda: display_area.empty()
-    #("Analyze Farm Conditions", on_click=lambda: display_area.empty())
+    analyze_button = st.button("Analyze Farm Conditions", on_click=lambda: display_area.empty())
     
     display_area = st.empty()
 
     if analyze_button:
-            display_area = st.empty()
             # Create a container within the placeholder for progress
             with display_area.container():
                 status_area = st.container()
